@@ -1,4 +1,4 @@
 yubikey-totp-gui
 ================
 
-GUI for TOTP with the YubiKey.  Suitable for Two-Factor authentication with Gmail, Dropbox, AWS etc.
+GUI for TOTP with the YubiKey.  Suitable for Two-Factor authentication with Gmail, Dropbox, Github, AWS etc.

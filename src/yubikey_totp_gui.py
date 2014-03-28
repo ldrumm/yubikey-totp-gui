@@ -37,11 +37,11 @@ from Tkinter import (
     StringVar,
     Entry,
     Label,
-    Spinbox,
     Menu,
     Button,
     Radiobutton,
     Frame,
+    Checkbutton,
 )
 from gettext import gettext as _ #TODO
 import tkMessageBox
@@ -53,14 +53,27 @@ DEFAULT_TIME = 0
 DEFAULT_STEP = 30
 DEFAULT_DIGITS = 6
 
+def _rzfill(string, to_len):
+    """right-pad a string with zeros to the given length"""
+    if len(string) > to_len:
+        raise ValueError("string is already longer than to_len")
+    return string + '0' * (to_len - len(string))
+
+def _base32_to_hex(base32):
+    """simple base conversion using the RFC4648 base32 alphabet"""
+    ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+    x = 0
+    for digit in str(base32.upper().strip(' ')):
+        x = x * len(ALPHABET) + ALPHABET.index(digit)
+    return hex(x).lstrip('0x').rstrip('L').upper()
+
 
 class _Credits(object):
     """This class spawns the dialogue to show the license information"""
     def __init__(self, parent):
-            self.parent = parent
-            top = self.top = Toplevel(parent)
-            LICENSE =  __doc__
-            Label(top, text=LICENSE).grid(columnspan=4)
+        self.parent = parent
+        top = self.top = Toplevel(parent.root)
+        Label(top, text=__doc__).grid(columnspan=4)
 
 
 class _ProgrammingWindow(object):
@@ -70,9 +83,9 @@ class _ProgrammingWindow(object):
     """
     def __init__(self, parent):
         self.parent = parent
-        top = self.top = Toplevel(parent)
+        top = self.top = Toplevel(parent.root)
 
-        Label(top, text="Secret Key:").grid(columnspan=3)
+        Label(top, text="Secret Key(base32):").grid(columnspan=3)
 
         base32_key = Entry(top)
         base32_key.grid(row=1, column=0, columnspan=3)
@@ -93,38 +106,63 @@ class _ProgrammingWindow(object):
             ).grid(row=3, column=1),
         )
 
+        require_button = IntVar()
+        require_button_widget = Checkbutton(top,
+                text='Button press required',
+                variable=require_button,
+            ).grid(row=2, columnspan=3)
+        require_button.set(1)
+
         submit = Button(top,
             text="Program",
-            command=lambda: self._program_confirm(challenge_response_slot.get(), base32_key.get())
-        ).grid(row=2, column=1)
+            command=lambda: self._program_confirm(
+                challenge_response_slot.get(),
+                base32_key.get(),
+                require_button.get()
+            )
+        ).grid(row=4, column=1)
 
         cancel = Button(
             top,
             text="Cancel",
             command=self._program_cancel
-        ).grid(row=2, column=0)
+        ).grid(row=4, column=0)
 
     def _program_cancel(self):
         """guess pylint"""
         self.top.destroy()
 
-    def _program_confirm(self, slot, base32_key):
+    def _program_confirm(self, slot, base32_key, require_button):
         """Confirms that programming should take place"""
         #print base32_key
         if slot != 1 and slot != 2:
             return tkMessageBox.showerror("Error", "Please Choose a slot")
 
-        if tkMessageBox.askokcancel("Confirm", "Overwrite slot %s?\nThis cannot be undone." % slot):
-            #print "PRGORAMMING"
-            self._program_key(slot, base32_key)
-            self._program_cancel()
+        if tkMessageBox.askokcancel("Confirm",
+            """Overwrite slot %s?\n"""
+            """This cannot be undone, and is presently experimental\n"""
+            """with the possibility of setting fire to your YubiKey""" % slot):
+            self._program_key(slot, base32_key, require_button)
         else:
-            #print "cancelled"
             self._program_cancel()
 
-    def _program_key(self, slot, base32_key):
+    def _program_key(self, slot, base32_key, require_button):
         """Once we get here, things get destructive"""
-        return tkMessageBox.showerror("Error", "Not Implemented")
+        config = self.parent.yk.init_config()
+        config.extended_flag('SERIAL_API_VISIBLE', True)
+        print require_button
+        config.mode_challenge_response(
+            'h:' + _rzfill(_base32_to_hex(base32_key), 40),
+            type='HMAC',
+            variable=True,
+            require_button=bool(require_button),
+        )
+        try:
+            self.parent.yk.write_config(config, slot=slot)
+            tkMessageBox.showinfo("Success", "Successfully programmed YubiKey in slot %s." % slot)
+        except (yubico.yubico_exception.YubicoError, yubico.yubico_exception.InputError) as e:
+            tkMessageBox.showerror("Error", e)
+        self._program_cancel()
 
 
 class MainWindow(object):
@@ -212,10 +250,10 @@ class MainWindow(object):
     def _about_dialogue(self):
         """callback for the help->about pulldown"""
         webbrowser.open('https://github.com/ldrumm/yubikey-totp-gui')
-        
+
     def _credits_dialogue(self):
         """callback for the help->about pulldown"""
-        credits_dialogue = _Credits (self.root)
+        credits_dialogue = _Credits(self)
         self.root.wait_window(credits_dialogue.top)
 
     def _program_key(self):
@@ -223,7 +261,7 @@ class MainWindow(object):
         callback for the edit->Program YubiKey pulldown
         Opens a new configuration window, blocking until exit.
         """
-        prg_dialogue = _ProgrammingWindow(self.root)
+        prg_dialogue = _ProgrammingWindow(self)
         self.root.wait_window(prg_dialogue.top)
 
     def detect_yubikey(self):
@@ -235,7 +273,6 @@ class MainWindow(object):
 #            except (yubico.yubico_exception.YubicoError, yubico.yubikey_usb_hid.usb.USBError):
         except Exception:
             self.version.set("No YubiKey detected")
-#            self.user_message.set("Please plug in your YubiKey")
             self.serial.set("")
             self.yk = None
 
@@ -243,7 +280,7 @@ class MainWindow(object):
         """
         Create an OATH TOTP OTP and return it as a string (to disambiguate leading zeros).
         This is ripped straight out of yubico's command-line script, `yubikey-totp`.
-        Credit due. 
+        Credit due.
         """
         secret = struct.pack('> Q', int(time.mktime(time.gmtime())) / DEFAULT_STEP).ljust(64, chr(0x0))
         response = self.yk.challenge_response(secret, slot=self.slot.get())
@@ -278,4 +315,4 @@ def main():
 if __name__ == '__main__':
     sys.exit(main())
 
-    
+
