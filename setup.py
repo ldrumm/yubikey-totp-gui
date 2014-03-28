@@ -16,7 +16,7 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
     ],
-    install_requires=['yubico'],
+    install_requires=['python-yubico', 'tk'],
     entry_points = {
         'console_scripts': [
             'yubikey-totp-gui = yubikey_totp_gui:main'
