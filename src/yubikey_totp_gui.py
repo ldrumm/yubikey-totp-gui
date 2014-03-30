@@ -197,7 +197,7 @@ class MainWindow(object):
         self.slot.set(DEFAULT_SLOT)
         self.base32_key = StringVar()
         self.digits = IntVar()
-        self.digits.set(6)
+        self.digits.set(DEFAULT_DIGITS)
 
         self.totp = Button(
             self.frame,
@@ -215,6 +215,18 @@ class MainWindow(object):
                 value=2,
             ).grid(row=2, column=1)
         )
+
+        self.digits_radio = (
+            Radiobutton(text='6 digits',
+                variable=self.digits,
+                value=6,
+            ).grid(row=3, column=0),
+            Radiobutton(text='8 digits',
+                variable=self.digits,
+                value=8,
+            ).grid(row=3, column=1)
+        )
+        
         self.user_message = StringVar()
         self.user_message.set(
             "Choose challenge-response\n"\
