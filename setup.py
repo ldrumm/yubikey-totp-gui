@@ -5,7 +5,7 @@ setup(
     package_dir={'yubikey_totp_gui': './src'},
     packages=['yubikey_totp_gui'],
     name='yubikey-totp-gui',
-    version='0.1',
+    version='0.2',
     author_email='luke@lukedrummond.net',
     url='https://github.com/ldrumm/yubikey-totp-gui',
     author='Luke Drummond',
