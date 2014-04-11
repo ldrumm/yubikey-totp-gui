@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""Copyright (c) 2014, ldrumm. Contains portions from 'python-yubico-tools',
+"""
+
+Copyright (c) 2014, ldrumm. Contains portions from 'python-yubico-tools',
 (c) 2011, 2012 Yubico AB.
 All rights of the respective authors reserved.
 
@@ -22,7 +24,9 @@ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."""
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""
 
 import sys
 import time

@@ -2,3 +2,22 @@ yubikey-totp-gui
 ================
 
 GUI for TOTP with the YubiKey.  Suitable for Two-Factor authentication with Gmail, Dropbox, Github, AWS etc.
+
+Installation
+============
+
+Installation with `pip` should be fairly straightforward, but `pyusb` may not install cleanly as pip will refuse beta software by default. You will likely need to install the beta version first:
+
+    #for the in-development version
+    pip install pyusb==1.0.0b1 git+https://github.com/ldrumm/yubikey-totp-gui.git
+    
+    #for the pypi version
+    pip install pyusb==1.0.0b1 yubikey-totp-gui
+
+
+Windows
+======
+
+Installation on windows currently has some issues, as python-yubico does not seem to import properly (on my Windows 7 development machine at least). However, as Yubico [already offer a windows tool](https://www.yubico.com/applications/internet-services/gmail/) that does essentially the same thing as this project, that software can be used as an alternative.
+
+
