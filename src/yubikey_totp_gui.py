@@ -163,8 +163,13 @@ class _ProgrammingWindow(object):
         )
         try:
             self.parent.yk.write_config(config, slot=slot)
-            tkMessageBox.showinfo("Success", "Successfully programmed YubiKey in slot %s." % slot)
-        except (yubico.yubico_exception.YubicoError, yubico.yubico_exception.InputError) as e:
+            tkMessageBox.showinfo("Success",
+                "Successfully programmed YubiKey in slot %s." % slot
+            )
+        except (
+            yubico.yubico_exception.YubicoError,
+            yubico.yubico_exception.InputError
+        ) as e:
             tkMessageBox.showerror("Error", e)
         self._program_cancel()
 
@@ -230,7 +235,7 @@ class MainWindow(object):
                 value=8,
             ).grid(row=3, column=1)
         )
-        
+
         self.user_message = StringVar()
         self.user_message.set(
             "Choose challenge-response\n"\
@@ -240,6 +245,8 @@ class MainWindow(object):
             self.frame,
             textvariable=self.user_message
         ).grid(column=1, row=0, columnspan=2)
+
+        self.root.bind_class(self.root, '<Key-Return>',  self.return_key)
 
     def _menu_setup(self):
         """Pull-down menus init"""
@@ -280,17 +287,28 @@ class MainWindow(object):
         prg_dialogue = _ProgrammingWindow(self)
         self.root.wait_window(prg_dialogue.top)
 
+    def return_key(self, *args, **kwargs):
+        print("return_key pressed:%s;%s%s" % (self, args, kwargs))
+        return self.get_totp()
+
+
     def detect_yubikey(self):
         """Tries to detect a plugged-in YubiKey else alerts user"""
         try:
             self.yk = yubico.find_yubikey()
             self.version.set("Version:%s" % self.yk.version())
             self.serial.set("Serial:%s" % self.yk.serial())
-#            except (yubico.yubico_exception.YubicoError, yubico.yubikey_usb_hid.usb.USBError):
-        except Exception:
+        except yubico.yubikey.YubiKeyError:
             self.version.set("No YubiKey detected")
             self.serial.set("")
             self.yk = None
+        except yubico.yubikey_usb_hid.usb.USBError as e:
+            self.version.set("No YubiKey detected")
+            self.serial.set("")
+            self.user_message.set(
+                "A USB error occurred:%s - do you have permission to access USB devices?",
+                e.message
+            )
 
     def _make_totp(self):
         """
@@ -311,6 +329,7 @@ class MainWindow(object):
         if self.yk is None:
             return
         self.user_message.set("Touch the yubikey button")
+        self.root.update()
         try:
             otp = self._make_totp()
         except yubico.yubico_exception.YubicoError as e:
