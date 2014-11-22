@@ -9,7 +9,7 @@ setup(
     author_email='luke@lukedrummond.net',
     url='https://github.com/ldrumm/yubikey-totp-gui',
     author='Luke Drummond',
-    long_description=open('README').read(),
+    long_description=open('README.rst').read(),
     license = "2 clause BSD",
     classifiers=[
         "Development Status :: 3 - Alpha",
