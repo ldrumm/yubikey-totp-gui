@@ -38,9 +38,11 @@ modification of system permissions. The simplest way to do this is to install
 your distribution's packaged version of `yubikey-personalization` which takes
 care of things for you, or alternatively copy the yubico udev rules:
 
-    ``sudo curl -o /etc/udev/rules.d/69-yubikey.rules https://raw.githubusercontent.com/Yubico/yubikey-personalization/master/69-yubikey.rules
-    sudo curl -o /etc/udev/rules.d/70-yubikey.rules https://raw.githubusercontent.com/Yubico/yubikey-personalization/master/70-yubikey.rules
-    sudo service udev restart``
+    ``sudo curl -o /etc/udev/rules.d/69-yubikey.rules https://raw.githubusercontent.com/Yubico/yubikey-personalization/master/69-yubikey.rules``
+    
+    ``sudo curl -o /etc/udev/rules.d/70-yubikey.rules https://raw.githubusercontent.com/Yubico/yubikey-personalization/master/70-yubikey.rules``
+    
+    ``sudo service udev restart``
 
 Windows
 =======
