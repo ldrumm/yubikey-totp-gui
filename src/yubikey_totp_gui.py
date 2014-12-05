@@ -138,23 +138,41 @@ class _ProgrammingWindow(object):
 
     def _program_confirm(self, slot, base32_key, require_button):
         """Confirms that programming should take place"""
-        #print base32_key
-        if slot != 1 and slot != 2:
+        if int(slot) not in (1, 2):
             return tkMessageBox.showerror("Error", "Please Choose a slot")
-
-        if tkMessageBox.askokcancel("Confirm",
-            """Overwrite slot %s?\n"""
-            """This cannot be undone, and is presently experimental\n"""
-            """with the possibility of setting fire to your YubiKey""" % slot):
+        try:
+            _base32_to_hex(base32_key)
+        except ValueError:
+            return tkMessageBox.showerror(
+                "Error",
+                "{0} is not a valid base32 key".format(base32_key)
+            )
+        try:
+            serial = self.parent.yk.serial()
+        except (AttributeError, yubico.yubikey_usb_hid.usb.USBError):
+            return tkMessageBox.showerror("Error", "No YubiKey detected")
+        if tkMessageBox.askokcancel(
+            "Confirm",
+            "Overwrite slot {0} of key with serial {1}?\n"
+            "This will purge the existing setup and cannot be undone".format(
+                slot,
+                serial
+            )
+        ):
             self._program_key(slot, base32_key, require_button)
         else:
             self._program_cancel()
 
     def _program_key(self, slot, base32_key, require_button):
         """Once we get here, things get destructive"""
-        config = self.parent.yk.init_config()
+        try:
+            config = self.parent.yk.init_config()
+        except (AttributeError, yubico.yubikey_usb_hid.usb.USBError):
+            return tkMessageBox.showerror(
+                "Error",
+                "No YubiKey detected"
+            )
         config.extended_flag('SERIAL_API_VISIBLE', True)
-        print require_button
         config.mode_challenge_response(
             'h:' + _rzfill(_base32_to_hex(base32_key), 40),
             type='HMAC',
@@ -163,12 +181,14 @@ class _ProgrammingWindow(object):
         )
         try:
             self.parent.yk.write_config(config, slot=slot)
-            tkMessageBox.showinfo("Success",
+            tkMessageBox.showinfo(
+                "Success",
                 "Successfully programmed YubiKey in slot %s." % slot
             )
         except (
             yubico.yubico_exception.YubicoError,
-            yubico.yubico_exception.InputError
+            yubico.yubico_exception.InputError,
+            yubico.yubikey_usb_hid.usb.USBError
         ) as e:
             tkMessageBox.showerror("Error", e)
         self._program_cancel()
@@ -288,9 +308,7 @@ class MainWindow(object):
         self.root.wait_window(prg_dialogue.top)
 
     def return_key(self, *args, **kwargs):
-        print("return_key pressed:%s;%s%s" % (self, args, kwargs))
         return self.get_totp()
-
 
     def detect_yubikey(self):
         """Tries to detect a plugged-in YubiKey else alerts user"""
@@ -332,7 +350,7 @@ class MainWindow(object):
         self.root.update()
         try:
             otp = self._make_totp()
-        except yubico.yubico_exception.YubicoError as e:
+        except (yubico.yubico_exception.YubicoError, yubico.yubikey_usb_hid.usb.USBError) as e:
             self.user_message.set(e)
             return
         if not otp:
