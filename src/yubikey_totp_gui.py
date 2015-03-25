@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 """
 
 Copyright (c) 2014, ldrumm. Contains portions from 'python-yubico-tools',
@@ -195,9 +195,9 @@ class _ProgrammingWindow(object):
 
 
 class MainWindow(object):
-    """Yubkey TOTP Challenge response root window
-    Contains options for fetching a TOTP from the Yubikey
-
+    """
+    Yubikey TOTP Challenge response root window
+    Contains options for fetching a TOTP.
     """
     def __init__(self, root):
 
@@ -266,7 +266,7 @@ class MainWindow(object):
             textvariable=self.user_message
         ).grid(column=1, row=0, columnspan=2)
 
-        self.root.bind_class(self.root, '<Key-Return>',  self.return_key)
+        self.root.bind_class(self.root, '<KeyPress>',  self.keypress)
 
     def _menu_setup(self):
         """Pull-down menus init"""
@@ -288,7 +288,7 @@ class MainWindow(object):
 
     def _help_dialogue(self):
         """callback for the help->help pulldown"""
-        webbrowser.open('https://www.yubico.com/applications/internet-services/gmail/')
+        webbrowser.open('https://github.com/ldrumm/yubikey-totp-gui/wiki')
 
     def _about_dialogue(self):
         """callback for the help->about pulldown"""
@@ -307,8 +307,23 @@ class MainWindow(object):
         prg_dialogue = _ProgrammingWindow(self)
         self.root.wait_window(prg_dialogue.top)
 
-    def return_key(self, *args, **kwargs):
-        return self.get_totp()
+    def keypress(self, event):
+        """
+        Event handler for keypress events.
+        """
+        events = {
+            '1': lambda: self.slot.set(1),
+            '2': lambda: self.slot.set(2),
+            '6': lambda: self.digits.set(6),
+            '8': lambda: self.digits.set(8),
+        }
+        try:
+            events[event.keysym]()
+        except KeyError:
+            pass
+        if event.keysym in ('1', '2', 'Return', 'Enter'):
+            self.get_totp()
+            self.root.wm_withdraw()
 
     def detect_yubikey(self):
         """Tries to detect a plugged-in YubiKey else alerts user"""
