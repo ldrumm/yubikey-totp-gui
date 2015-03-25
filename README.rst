@@ -49,7 +49,7 @@ Windows
 
 Installation on windows currently has some issues, as python-yubico does not
 seem to import properly (on my Windows 7 development machine at least). 
-However, as Yubico `already offer a windows tool<https://www.yubico.com/applications/internet-services/gmail/>`_
+However, as Yubico `already offer a windows tool <https://www.yubico.com/applications/internet-services/gmail/>`_
 that does essentially the same thing as this project, that software can be used 
 as an alternative.
 
