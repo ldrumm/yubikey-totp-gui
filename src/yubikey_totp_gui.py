@@ -141,7 +141,7 @@ class _ProgrammingWindow(object):
         if int(slot) not in (1, 2):
             return tkMessageBox.showerror("Error", "Please Choose a slot")
         try:
-            _base32_to_hex(base32_key)
+            _base32_to_hex(base32_key.replace(' ', ''))
         except ValueError:
             return tkMessageBox.showerror(
                 "Error",
