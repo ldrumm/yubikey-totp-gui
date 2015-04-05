@@ -349,7 +349,7 @@ class MainWindow(object):
         This is ripped straight out of yubico's command-line script, `yubikey-totp`.
         Credit due.
         """
-        secret = struct.pack('> Q', int(time.mktime(time.gmtime())) / DEFAULT_STEP).ljust(64, chr(0x0))
+        secret = struct.pack('> Q', int(time.time()) / DEFAULT_STEP).ljust(64, chr(0x0))
         response = self.yk.challenge_response(secret, slot=self.slot.get())
         # format with appropriate number of leading zeros
         fmt = '%.' + str(self.digits.get()) + 'i'
